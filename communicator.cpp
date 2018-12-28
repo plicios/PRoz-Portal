@@ -1,3 +1,4 @@
+#include <sstream>
 #include "communicator.h"
 #include "mpi.h"
 #include "common.h"
@@ -16,7 +17,15 @@ Message Receive(int tag, bool isMain)
     MPI_Status status;
     ShowMessage(isMain, "before recive");
     Message message;
-    MPI_Recv(&message, 1, mpi_message_type, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+
+    int buffer[3];
+    MPI_Recv(&buffer, 3, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    ShowMessage(isMain, "after recive");
+
+    message.processId = buffer[0];
+    message.timeStamp = buffer[1];
+    message.messageType = buffer[2];
 
     ShowMessage(isMain, "recived");
 
@@ -28,7 +37,8 @@ Message Receive(int tag, bool isMain)
 void Send(int toProcess, Message message, int tag)
 {
     UpdateLamportClock(0);
-    MPI_Send(&message, 1, mpi_message_type, toProcess, tag, MPI_COMM_WORLD);
+    int buffer[3] = {message.processId, message.timeStamp, message.messageType};
+    MPI_Send(&buffer, 3, MPI_INT, toProcess, tag, MPI_COMM_WORLD);
 }
 
 void SendToAll(Message message, int tag)

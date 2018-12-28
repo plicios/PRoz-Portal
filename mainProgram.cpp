@@ -5,7 +5,6 @@
 #include "globals.h"
 #include "communicator.h"
 
-
 void RequestPortal(bool requestUp)
 {
     ResetAgrees();
@@ -90,4 +89,3 @@ void mainProgram()
         GoDown();
     }
 }
-
