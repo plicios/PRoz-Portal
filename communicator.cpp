@@ -18,7 +18,7 @@ Message Receive(int tag, bool isMain)
     ShowMessage(isMain, "before recive");
     Message message;
 
-    int buffer[3];
+    int buffer[10];
     MPI_Recv(&buffer, 3, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
     ShowMessage(isMain, "after recive");
@@ -37,7 +37,10 @@ Message Receive(int tag, bool isMain)
 void Send(int toProcess, Message message, int tag)
 {
     UpdateLamportClock(0);
-    int buffer[3] = {message.processId, message.timeStamp, message.messageType};
+    std::ostringstream stringStream;
+    stringStream << message.processId << "x" << message.timeStamp << "x" << message.messageType << std::endl;
+    ShowMessage(false, stringStream.str());
+    int buffer[10] = {message.processId, message.timeStamp, message.messageType, -1, -2, -3, -4, -5, -6, -7};
     MPI_Send(&buffer, 3, MPI_INT, toProcess, tag, MPI_COMM_WORLD);
 }
 
