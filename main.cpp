@@ -19,7 +19,12 @@ using namespace std;
 int main(int argc, char** argv)
 {
     int rank, size;
-    MPI_Init(&argc, &argv);
+    int prov;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &prov);
+    if (prov!=MPI_THREAD_MULTIPLE) {
+        MPI_Finalize();
+        exit(0);
+    }
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (size < 2) {

@@ -14,7 +14,7 @@ void Wait(int minWaitTime, int maxWaitTime)
     ostringstream startStringStream;
     startStringStream << "start sleep " << randomTime << " milliseconds";
     ShowMessage(true, startStringStream.str());
-    usleep(randomTime * 1000);
+    usleep(randomTime * 100);
     ostringstream stopStringStream;
     stopStringStream << "stop sleep " << randomTime << " milliseconds";
     ShowMessage(true, stopStringStream.str());
