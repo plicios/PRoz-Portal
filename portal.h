@@ -1,14 +1,23 @@
 #include <string>
 
-void IncrementAgrees();
-void ResetAgrees();
-int GetAgrees();
+void ChangeLocation();
 
-void AddToPortal(int processId, int timeStamp, std::string direction);
-void RemoveFromPortal(int processId);
-int GetMyPortalRequestTimeStamp();
-int GetPeopleBeforeMe();
+int GetMyDirection();
 
-void SetMyPortalRequestDirection(std::string _myDirection);
-std::string GetMyPortalRequestDirection();
-std::string GetPortalDirection();
+void ClearPortalStatus();
+
+void UpdatePortalStatus(int newPortalTaken);
+
+int GetPortalStatus();
+
+void IncrementResponseCounter();
+
+int GetResponseCounter();
+
+int GetMyRequestTimestamp();
+
+void SetMyRequestTimestamp(int _myRequestTimestamp);
+
+void SetInPortal(int _inPortal);
+
+int GetInPortal();

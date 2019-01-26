@@ -4,30 +4,25 @@
 #include "common.h"
 #include "utils.h"
 
-MPI_Datatype mpi_message_type;
-
-MPI_Datatype* getType()
-{
-    return &mpi_message_type;
-}
-
+#define messageSize 4
 
 Message Receive(int tag, bool isMain)
 {
     MPI_Status status;
-    ShowMessage(isMain, "before recive");
+//    ShowMessage(isMain, "before recive");
     Message message;
 
-    int buffer[3];
-    MPI_Recv(&buffer, 3, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    int buffer[messageSize];
+    MPI_Recv(&buffer, messageSize, MPI_INT, MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    ShowMessage(isMain, "after recive");
+//    ShowMessage(isMain, "after recive");
 
     message.processId = buffer[0];
     message.timeStamp = buffer[1];
     message.messageType = buffer[2];
+    message.data = buffer[3];
 
-    ShowMessage(isMain, "recived");
+//    ShowMessage(isMain, "recived");
 
     UpdateLamportClock(message.timeStamp);
 
@@ -36,9 +31,13 @@ Message Receive(int tag, bool isMain)
 
 void Send(int toProcess, Message message, int tag)
 {
+    std::ostringstream stringStream;
+    stringStream << "send message: " << toProcess << " : " << message.timeStamp << " : " << message.messageType << " : " << message.data << std::endl;
+    ShowMessage(false, stringStream.str());
+
     UpdateLamportClock(0);
-    int buffer[3] = {message.processId, message.timeStamp, message.messageType};
-    MPI_Send(&buffer, 3, MPI_INT, toProcess, tag, MPI_COMM_WORLD);
+    int buffer[messageSize] = {message.processId, message.timeStamp, message.messageType, message.data};
+    MPI_Send(&buffer, messageSize, MPI_INT, toProcess, tag, MPI_COMM_WORLD);
 }
 
 void SendToAll(Message message, int tag)
@@ -52,9 +51,13 @@ void SendToAll(Message message, int tag)
     }
 }
 
-void PortalGrantedGet()
+void PortalGrantedGet(int requestTimestamp)
 {
-    Receive(PortalGrantedTag, true);
+    Message message = Receive(PortalGrantedTag, true);
+    if(message.timeStamp <= requestTimestamp)
+    {
+        PortalGrantedGet(requestTimestamp);
+    }
 }
 
 void PortalGrantedSend()
@@ -63,5 +66,6 @@ void PortalGrantedSend()
     message.processId = getProcessId();
     message.timeStamp = GetLamportTime();
     message.messageType = -1;
+    message.data = 0;
     Send(getProcessId(), message, PortalGrantedTag);
 }

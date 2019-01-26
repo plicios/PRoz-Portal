@@ -7,7 +7,6 @@
 #include "mainProgram.h"
 #include "receiver.h"
 #include "globals.h"
-#include "communicator.h"
 #include <time.h>
 #include <stddef.h>
 
@@ -19,11 +18,12 @@ using namespace std;
 int main(int argc, char** argv)
 {
     int rank, size;
-    int prov;
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &prov);
-    if (prov!=MPI_THREAD_MULTIPLE) {
+    int provided;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    if (provided!=MPI_THREAD_MULTIPLE) {
         MPI_Finalize();
-        exit(0);
+        fprintf(stderr,"ERROR: The MPI library does not have full thread support.\n");
+        exit(-2);
     }
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -32,24 +32,10 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    /* create a type for struct message */
-    const int itemsCount = 3;
-    int blockLengths[itemsCount] = { 1, 1, 1};
-    MPI_Datatype types[itemsCount] = {MPI_INT, MPI_INT, MPI_INT};
-    MPI_Datatype* mpi_message_type = getType();
-    MPI_Aint offsets[itemsCount];
-
-    offsets[0] = offsetof(Message, messageType);
-    offsets[1] = offsetof(Message, processId);
-    offsets[2] = offsetof(Message, timeStamp);
-
-    MPI_Type_create_struct(itemsCount, blockLengths, offsets, types, mpi_message_type);
-    MPI_Type_commit(mpi_message_type);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     setProcessId(rank);
     setProcessNumber(size);
-    setPortalCapacity(1); //TODO add var from command prompt
+    setPortalCapacity(atoi(argv[1]));
 
     srand((unsigned int) (time(0) + rank));
 
