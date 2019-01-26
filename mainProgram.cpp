@@ -5,39 +5,43 @@
 #include "globals.h"
 #include "communicator.h"
 
+
+
 void RequestPortal(bool requestUp)
 {
-    ResetAgrees();
-    setWaitingForPortal(true);
+    ClearPortalStatus();
 
     Message message;
     message.processId = getProcessId();
     message.timeStamp = GetLamportTime();
-    message.messageType = requestUp ? PortalUpRequest : PortalDownRequest;
+    message.messageType = PortalRequest;
+    message.data = requestUp ? 1 : -1;
 
     UpdateLamportClock(0);
 
-    SetMyPortalRequestDirection(requestUp ? UP : DOWN);
-    AddToPortal(message.processId, message.timeStamp, requestUp ? UP : DOWN);
+    SetMyRequestTimestamp(GetLamportTime());
+
     SendToAll(message, OtherTag);
 }
 
 void ReleasePortal()
 {
-    UpdateLamportClock(0);
-
     Message message;
     message.timeStamp = GetLamportTime();
     message.processId = getProcessId();
     message.messageType = PortalRelease;
+    message.data = GetInPortal();
 
-    RemoveFromPortal(message.processId);
+    ChangeLocation();
+    SetInPortal(0);
+    UpdateLamportClock(0);
+
     SendToAll(message, OtherTag);
 }
 
 void WaitForPortal()
 {
-    PortalGrantedGet();
+    PortalGrantedGet(GetMyRequestTimestamp());
 }
 
 void WorkDown()
@@ -45,6 +49,7 @@ void WorkDown()
     ShowMessage(true, "Start working down");
     Wait(10000,20000);
     ShowMessage(true, "Stop working down");
+    UpdateLamportClock(0);
 }
 
 void WorkUp()
@@ -52,6 +57,7 @@ void WorkUp()
     ShowMessage(true, "Start working up");
     Wait(10000,20000);
     ShowMessage(true, "Stop working up");
+    UpdateLamportClock(0);
 }
 
 void GoUp()
@@ -64,7 +70,6 @@ void GoUp()
     Wait(10000,20000);
     ReleasePortal();
     ShowMessage(true, "Is up");
-
 }
 
 void GoDown()

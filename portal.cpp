@@ -1,126 +1,65 @@
-#include <zconf.h>
-#include <pthread.h>
-#include <vector>
-#include "globals.h"
 #include "portal.h"
-#include "common.h"
 
-int portalAgrees;
-pthread_mutex_t portalAgreesMutex = PTHREAD_MUTEX_INITIALIZER;
+int status;
+int responseCounter;
+int myRequestTimestamp = -1;
+int inPortal;
+int myLocation; //0 - down, 1 - up
 
-int myRequestTimeStamp = -1;
-pthread_mutex_t myRequestTimeStampMutex = PTHREAD_MUTEX_INITIALIZER;
+//add mutexes
 
-std::string myDirection;
-pthread_mutex_t myDirectionMutex = PTHREAD_MUTEX_INITIALIZER;
-
-std::vector<PortalPlace> portalPlaces = std::vector<PortalPlace>();
-pthread_mutex_t portalPlacesMutex = PTHREAD_MUTEX_INITIALIZER;
-
-void IncrementAgrees()
+void ChangeLocation()
 {
-    pthread_mutex_lock(&portalAgreesMutex);
-    portalAgrees++;
-    pthread_mutex_unlock(&portalAgreesMutex);
-}
-void ResetAgrees()
-{
-    pthread_mutex_lock(&portalAgreesMutex);
-    portalAgrees = 1;
-    pthread_mutex_unlock(&portalAgreesMutex);
-}
-int GetAgrees()
-{
-    pthread_mutex_lock(&portalAgreesMutex);
-    int returnValue = portalAgrees;
-    pthread_mutex_unlock(&portalAgreesMutex);
-    return returnValue;
+    myLocation = 1 - myLocation;
 }
 
-void AddToPortal(int processId, int timeStamp, std::string direction)
+int GetMyDirection()
 {
-    PortalPlace portalPlace;
-    portalPlace.timeStamp = timeStamp;
-    portalPlace.processId = processId;
-    portalPlace.direction = direction;
-
-    pthread_mutex_lock(&portalPlacesMutex);
-    portalPlaces.push_back(portalPlace);
-    pthread_mutex_unlock(&portalPlacesMutex);
+    return myLocation == 0 ? 1 : -1;
 }
 
-void RemoveFromPortal(int processId)
+void ClearPortalStatus()
 {
-    pthread_mutex_lock(&portalPlacesMutex);
-    for (int i = 0; i < portalPlaces.size(); i++)
-    {
-        if(portalPlaces[i].processId == processId)
-        {
-            portalPlaces.erase(portalPlaces.begin() + i);
-            break;
-        }
-    }
-    pthread_mutex_unlock(&portalPlacesMutex);
+    status = 0;
+    responseCounter = 0;
 }
 
-int GetPeopleBeforeMe()
+void UpdatePortalStatus(int newPortalTaken)
 {
-    int peopleBeforeMe = 0;
-    pthread_mutex_lock(&portalPlacesMutex);
-    pthread_mutex_lock(&myRequestTimeStampMutex);
-    for(int i = 0; i < portalPlaces.size(); i++)
-    {
-        PortalPlace processPolitics = portalPlaces[i];
-        if(processPolitics.timeStamp < myRequestTimeStamp)
-        {
-            peopleBeforeMe += 1;
-        }
-        else if (processPolitics.timeStamp == myRequestTimeStamp && processPolitics.processId < getProcessId())
-        {
-            peopleBeforeMe += 1;
-        }
-    }
-    pthread_mutex_unlock(&myRequestTimeStampMutex);
-    pthread_mutex_unlock(&portalPlacesMutex);
-    return peopleBeforeMe;
+    status += newPortalTaken;
 }
 
-int GetMyPortalRequestTimeStamp()
+int GetPortalStatus()
 {
-    pthread_mutex_lock(&myRequestTimeStampMutex);
-    int returnValue = myRequestTimeStamp;
-    pthread_mutex_unlock(&myRequestTimeStampMutex);
-    return returnValue;
+    return status;
 }
 
-void SetMyPortalRequestDirection(std::string _myDirection)
+void IncrementResponseCounter()
 {
-    pthread_mutex_lock(&myDirectionMutex);
-    myDirection = _myDirection;
-    pthread_mutex_unlock(&myDirectionMutex);
+    responseCounter++;
 }
 
-std::string GetMyPortalRequestDirection()
+int GetResponseCounter()
 {
-    pthread_mutex_lock(&myDirectionMutex);
-    std::string returnValue = myDirection;
-    pthread_mutex_unlock(&myDirectionMutex);
-    return returnValue;
+    return responseCounter;
 }
 
-std::string GetPortalDirection()
+int GetMyRequestTimestamp()
 {
-    std::string returnValue;
-    pthread_mutex_lock(&portalPlacesMutex);
-    if(portalPlaces.empty())
-    {
-        returnValue = "no";
-    }
-    else
-    {
-        returnValue = portalPlaces.at(0).direction;
-    }
+    return myRequestTimestamp;
+}
 
-    pthread_mutex_unlock(&portalPlacesMutex);
-    return returnValue;
+void SetMyRequestTimestamp(int _myRequestTimestamp)
+{
+    myRequestTimestamp =_myRequestTimestamp;
+}
+
+void SetInPortal(int _inPortal)
+{
+    inPortal = _inPortal;
+}
+
+int GetInPortal()
+{
+    return inPortal;
 }

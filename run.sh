@@ -1,1 +1,1 @@
-mpirun -np 4 ./main 10 2
+mpirun -np 3 ./main 1
